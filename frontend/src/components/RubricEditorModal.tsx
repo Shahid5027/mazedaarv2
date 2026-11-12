@@ -43,7 +43,7 @@ export const RubricEditorModal: React.FC<RubricEditorModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !questionPrompt || !referenceAnswer) return;
+    if (!title || !questionPrompt) return;
 
     setSaving(true);
     const payload = {
@@ -58,7 +58,7 @@ export const RubricEditorModal: React.FC<RubricEditorModalProps> = ({
           question_id: "Q1",
           prompt: questionPrompt,
           max_marks: totalMarks,
-          reference_answer: referenceAnswer,
+          reference_answer: referenceAnswer.trim(),
         },
       ],
     };
@@ -144,10 +144,9 @@ export const RubricEditorModal: React.FC<RubricEditorModalProps> = ({
             </div>
 
             <div>
-              <label className="block font-medium text-slate-600 mb-1">Faculty Reference / Benchmark Answer</label>
+              <label className="block font-medium text-slate-600 mb-1">Faculty Reference / Benchmark Answer <span className="font-normal text-slate-400">(optional if uploading a reference sheet)</span></label>
               <textarea
                 rows={3}
-                required
                 value={referenceAnswer}
                 onChange={(e) => setReferenceAnswer(e.target.value)}
                 placeholder="Enter the ideal expected answer containing key terms, algorithmic invariants, and proofs..."

@@ -11,6 +11,7 @@ frontend/out/
 # Database & local data
 *.db
 *.sqlite3
+backend/uploads/
 
 # Environment
 .env

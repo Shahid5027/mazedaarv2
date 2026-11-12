@@ -238,6 +238,26 @@ export interface PS2EvaluationDetail {
   max_score: number;
   max_marks?: number;
   percentage: number;
+  annotated_pages?: string[];
+  answer_regions?: Array<{
+    page_number: number;
+    width: number;
+    height: number;
+    image_url: string;
+    boxes: Array<{
+      id: string;
+      label: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      status: "correct" | "partial" | "wrong";
+      awarded: number;
+      max_marks: number;
+      text: string;
+      similarity: number;
+    }>;
+  }>;
   original_ai_score?: number;
   rubric_breakdown?: Record<string, RubricCriterionResult>;
   ai_feedback?: AIFeedbackPayload;

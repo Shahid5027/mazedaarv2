@@ -4,6 +4,7 @@ import io
 import math
 from typing import Dict, List, Optional, Any, Tuple
 import datetime
+from pathlib import Path
 
 try:
     import fitz  # PyMuPDF
@@ -22,6 +23,22 @@ try:
     PYTESSERACT_AVAILABLE = True
 except ImportError:
     PYTESSERACT_AVAILABLE = False
+
+try:
+    from rapidocr import RapidOCR
+    RAPIDOCR_AVAILABLE = True
+except ImportError:
+    RAPIDOCR_AVAILABLE = False
+
+_RAPID_OCR = None
+
+
+def get_rapid_ocr():
+    global _RAPID_OCR
+    if _RAPID_OCR is None and RAPIDOCR_AVAILABLE:
+        from rapidocr import RapidOCR
+        _RAPID_OCR = RapidOCR()
+    return _RAPID_OCR
 
 # Lazy-loaded SentenceTransformer singleton
 _SENTENCE_MODEL = None
@@ -66,9 +83,37 @@ class SubjectiveEvaluationEngine:
             "ocr_support": {
                 "pymupdf": PYMUPDF_AVAILABLE,
                 "pytesseract": PYTESSERACT_AVAILABLE,
+                "rapidocr": RAPIDOCR_AVAILABLE,
                 "pillow": PIL_AVAILABLE
             }
         }
+
+    @staticmethod
+    def reference_answers_only(reference_text: str) -> str:
+        """Drop obvious question prompts from a combined question-paper and answer-key scan."""
+        lines = [line.strip() for line in reference_text.splitlines() if line.strip() and not line.strip().startswith("--- Page")]
+        answer_heading = re.compile(r"^\s*(?:model\s+)?(?:answer|solution|ans\.?)(?:\s*(?:to\s*)?(?:q(?:uestion)?\s*)?\d+)?\s*[:.)\-]\s*(.*)$", re.I)
+        question_heading = re.compile(r"^\s*(?:question\s+\d+|q\d+)\s*[:.)\-]?\s*", re.I)
+        sections_present = any(answer_heading.match(line) for line in lines)
+        if sections_present:
+            answer_lines = []
+            reading_answer = False
+            for line in lines:
+                match = answer_heading.match(line)
+                if match:
+                    reading_answer = True
+                    if match.group(1):
+                        answer_lines.append(match.group(1).strip())
+                elif question_heading.match(line):
+                    reading_answer = False
+                elif reading_answer:
+                    answer_lines.append(line)
+            cleaned = "\n".join(answer_lines).strip()
+            return cleaned or reference_text.strip()
+
+        prompts_removed = [line for line in lines if "?" not in line and not re.match(r"^\s*(?:question\s+\d+|q\d+)\b", line, re.I)]
+        cleaned = "\n".join(prompts_removed).strip()
+        return cleaned if len(cleaned.split()) >= 5 else reference_text.strip()
 
     @staticmethod
     def extract_text_from_file(file_bytes: bytes, filename: str) -> Dict[str, Any]:
@@ -96,11 +141,26 @@ class SubjectiveEvaluationEngine:
                             ocr_applied = True
                             confidence = 0.85
                         except Exception as e:
-                            extracted_text = (
-                                f"[Scanned Image Submission: {filename} ({img.width}x{img.height}px). "
-                                f"OCR runtime binary not in host PATH. Faculty manual inspection enabled.]"
-                            )
-                            confidence = 0.50
+                            if RAPIDOCR_AVAILABLE:
+                                try:
+                                    result = get_rapid_ocr()(img)
+                                    extracted_text = "\n".join(text for text in (result.txts or []) if text).strip()
+                                    ocr_applied = bool(extracted_text)
+                                    confidence = 0.82 if ocr_applied else 0.20
+                                except Exception:
+                                    confidence = 0.20
+                            else:
+                                extracted_text = ""
+                                confidence = 0.20
+                    elif RAPIDOCR_AVAILABLE:
+                        try:
+                            result = get_rapid_ocr()(img)
+                            extracted_text = "\n".join(text for text in (result.txts or []) if text).strip()
+                            ocr_applied = bool(extracted_text)
+                            confidence = 0.82 if ocr_applied else 0.20
+                        except Exception:
+                            extracted_text = ""
+                            confidence = 0.20
                     else:
                         extracted_text = f"[Image Submission: {filename} ({img.width}x{img.height}px). OCR module required for extraction.]"
                         confidence = 0.50
@@ -113,7 +173,7 @@ class SubjectiveEvaluationEngine:
                         "message": f"Corrupted image format: {str(e)}"
                     }
             return {
-                "success": len(extracted_text.split()) >= 5 or confidence >= 0.5,
+                "success": len(extracted_text.split()) >= 5,
                 "text": extracted_text,
                 "is_scanned": True,
                 "ocr_applied": ocr_applied,
@@ -139,10 +199,21 @@ class SubjectiveEvaluationEngine:
                             # Page appears scanned / image-only
                             is_scanned = True
                             pix = page.get_pixmap(dpi=150)
-                            if PIL_AVAILABLE and PYTESSERACT_AVAILABLE:
+                            if PIL_AVAILABLE and (PYTESSERACT_AVAILABLE or RAPIDOCR_AVAILABLE):
                                 try:
                                     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                                    ocr_p_txt = pytesseract.image_to_string(img).strip()
+                                    if PYTESSERACT_AVAILABLE:
+                                        try:
+                                            ocr_p_txt = pytesseract.image_to_string(img).strip()
+                                        except Exception:
+                                            if RAPIDOCR_AVAILABLE:
+                                                result = get_rapid_ocr()(img)
+                                                ocr_p_txt = "\n".join(text for text in (result.txts or []) if text).strip()
+                                            else:
+                                                ocr_p_txt = ""
+                                    else:
+                                        result = get_rapid_ocr()(img)
+                                        ocr_p_txt = "\n".join(text for text in (result.txts or []) if text).strip()
                                     if ocr_p_txt:
                                         p_txt = ocr_p_txt
                                         ocr_applied = True
@@ -219,6 +290,136 @@ class SubjectiveEvaluationEngine:
             )
 
         return True, "Rubric marks mathematically verified."
+
+    @classmethod
+    def create_annotated_pages(cls, file_bytes: bytes, filename: str, output_dir: str, reference_answer: str, max_marks: float) -> Dict[str, Any]:
+        """Render original pages and return editable, grouped OCR answer regions with per-region marks."""
+        if not PIL_AVAILABLE:
+            return {"pages": [], "total_score": 0.0, "max_score": max_marks, "percentage": 0.0}
+        try:
+            ext = Path(filename).suffix.lower()
+            images = []
+            if ext == ".pdf" and PYMUPDF_AVAILABLE:
+                document = fitz.open(stream=file_bytes, filetype="pdf")
+                for page in document:
+                    pixmap = page.get_pixmap(dpi=140, alpha=False)
+                    images.append(Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples))
+            elif ext in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}:
+                images.append(Image.open(io.BytesIO(file_bytes)).convert("RGB"))
+            else:
+                return {"pages": [], "total_score": 0.0, "max_score": max_marks, "percentage": 0.0}
+
+            rendered = []
+            destination = Path(output_dir)
+            destination.mkdir(parents=True, exist_ok=True)
+            for page_number, image in enumerate(images, start=1):
+                raw_lines = []
+                try:
+                    if PYTESSERACT_AVAILABLE:
+                        try:
+                            data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+                            grouped: Dict[Tuple[int, int, int], Dict[str, Any]] = {}
+                            for index, value in enumerate(data.get("text", [])):
+                                if not value.strip():
+                                    continue
+                                key = (data["block_num"][index], data["par_num"][index], data["line_num"][index])
+                                left, top = data["left"][index], data["top"][index]
+                                line = grouped.setdefault(key, {"text": [], "left": left, "top": top, "right": left, "bottom": top})
+                                line["text"].append(value.strip())
+                                line["left"] = min(line["left"], left)
+                                line["top"] = min(line["top"], top)
+                                line["right"] = max(line["right"], left + data["width"][index])
+                                line["bottom"] = max(line["bottom"], top + data["height"][index])
+                            raw_lines = list(grouped.values())
+                        except Exception:
+                            raw_lines = []
+                    if not raw_lines and RAPIDOCR_AVAILABLE:
+                        result = get_rapid_ocr()(image)
+                        for index, text in enumerate(result.txts or []):
+                            if not text or index >= len(result.boxes):
+                                continue
+                            points = result.boxes[index]
+                            xs, ys = [float(point[0]) for point in points], [float(point[1]) for point in points]
+                            raw_lines.append({"text": [text], "left": min(xs), "top": min(ys), "right": max(xs), "bottom": max(ys)})
+                except Exception:
+                    raw_lines = []
+
+                raw_lines.sort(key=lambda line: (line["top"], line["left"]))
+                heights = sorted(max(8, line["bottom"] - line["top"]) for line in raw_lines)
+                median_height = heights[len(heights) // 2] if heights else 18
+                gap_threshold = max(44, median_height * 2.7)
+                groups: List[List[Dict[str, Any]]] = []
+                for line in raw_lines:
+                    is_question_heading = bool(re.match(r"^\s*(?:question\s*)?q?\d{1,3}\s*[).:\-]", " ".join(line["text"]), re.I))
+                    if not groups or line["top"] - groups[-1][-1]["bottom"] > gap_threshold or is_question_heading:
+                        groups.append([line])
+                    else:
+                        groups[-1].append(line)
+
+                reference_chunks = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+|\n+", reference_answer) if chunk.strip()]
+                reference_chunks = reference_chunks or [reference_answer]
+                region_boxes = []
+                current_question = "Q1"
+                part_counts: Dict[str, int] = {}
+                for index, group in enumerate(groups, start=1):
+                    left = max(0, min(line["left"] for line in group) - 10)
+                    top = max(0, min(line["top"] for line in group) - 8)
+                    right = min(image.width, max(line["right"] for line in group) + 10)
+                    bottom = min(image.height, max(line["bottom"] for line in group) + 8)
+                    student_text = " ".join(" ".join(line["text"]) for line in group)
+                    question_match = re.match(r"^\s*(?:question\s*)?q?(\d{1,3})\s*[).:\-]", " ".join(group[0]["text"]), re.I)
+                    if question_match:
+                        current_question = f"Q{question_match.group(1)}"
+                    part_counts[current_question] = part_counts.get(current_question, 0) + 1
+                    label = f"{current_question} · Part {part_counts[current_question]}"
+                    student_words = set(re.findall(r"\b[a-z0-9]{2,}\b", student_text.lower()))
+                    best_match = 0.0
+                    for reference_chunk in reference_chunks:
+                        reference_words = set(re.findall(r"\b[a-z0-9]{2,}\b", reference_chunk.lower()))
+                        if not reference_words or not student_words:
+                            continue
+                        intersection = len(student_words & reference_words)
+                        precision = intersection / len(student_words)
+                        recall = intersection / len(reference_words)
+                        best_match = max(best_match, (2 * precision * recall / (precision + recall)) if precision + recall else 0.0)
+                    awarded_fraction = min(1.0, max(0.0, best_match))
+                    max_for_region = 0.0
+                    awarded = 0.0
+                    status = "correct" if awarded_fraction >= 0.8 else ("partial" if awarded_fraction >= 0.25 else "wrong")
+                    region_boxes.append({
+                        "id": f"p{page_number}-r{index}", "label": label,
+                        "x": round(left / image.width, 5), "y": round(top / image.height, 5),
+                        "width": round((right - left) / image.width, 5), "height": round((bottom - top) / image.height, 5),
+                        "status": status, "awarded": awarded, "max_marks": round(max_for_region, 2),
+                        "text": student_text[:500], "similarity": round(awarded_fraction, 3),
+                    })
+
+                if not region_boxes:
+                    region_boxes.append({
+                        "id": f"p{page_number}-manual-1", "label": "Q1 · Part 1",
+                        "x": 0.05, "y": 0.05, "width": 0.9, "height": 0.9,
+                        "status": "wrong", "awarded": 0.0, "max_marks": 0.0,
+                        "text": "No readable answer text was detected. Adjust this box and grade the page manually.", "similarity": 0.0,
+                    })
+
+                target = destination / f"page-{page_number}.png"
+                image.save(target, format="PNG", optimize=True)
+                rendered.append({"page_number": page_number, "width": image.width, "height": image.height, "image_path": str(target), "boxes": region_boxes})
+
+            flat_regions = [box for page in rendered for box in page["boxes"]]
+            max_for_region = max_marks / max(1, len(flat_regions))
+            allocated = 0.0
+            for index, region in enumerate(flat_regions):
+                region["max_marks"] = round(max_marks - allocated, 2) if index == len(flat_regions) - 1 else round(max_for_region, 2)
+                allocated += region["max_marks"]
+                region["awarded"] = round(region["max_marks"] * region["similarity"], 2)
+                region["status"] = "correct" if region["similarity"] >= 0.8 else ("partial" if region["similarity"] >= 0.25 else "wrong")
+            total_score = round(sum(box["awarded"] for box in flat_regions), 2)
+            total_max = round(sum(box["max_marks"] for box in flat_regions), 2)
+            percentage = round(total_score / total_max * 100, 1) if total_max else 0.0
+            return {"pages": rendered, "total_score": min(total_score, max_marks), "max_score": max_marks, "percentage": percentage}
+        except Exception:
+            return {"pages": [], "total_score": 0.0, "max_score": max_marks, "percentage": 0.0}
 
     @staticmethod
     def _compute_cosine_similarity(vec_a, vec_b) -> float:
@@ -367,6 +568,7 @@ class SubjectiveEvaluationEngine:
             rubric_breakdown[name] = {
                 "score": awarded,
                 "max": crit_max,
+                "status": "correct" if awarded >= crit_max * 0.85 else ("wrong" if awarded <= crit_max * 0.15 else "partial"),
                 "semantic_similarity": round(crit_sim, 3),
                 "evidence": evidence_sentence[:200] + ("..." if len(evidence_sentence) > 200 else ""),
                 "missing_concepts": missing,
