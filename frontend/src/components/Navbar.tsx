@@ -14,13 +14,20 @@ import {
   X,
   ChevronRight,
   Wifi,
+  LogOut,
+  LogIn,
+  User,
+  Shield,
+  GraduationCap,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { useUserRole } from "@/lib/useUserRole";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { role, userId } = useUserRole();
+  const { role, fullName, userId, isAuthenticated, logout } = useUserRole();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,6 +44,10 @@ export const Navbar: React.FC = () => {
       return [{ label: "Students", href: "/students" }, { label: `Profile (${pathname.split("/").pop()})` }];
     if (pathname === "/students")
       return [{ label: "Directory", href: "/" }, { label: "Shared 360° Students" }];
+    if (pathname === "/login")
+      return [{ label: "Authentication", href: "/login" }, { label: "Sign In" }];
+    if (pathname === "/register")
+      return [{ label: "Authentication", href: "/login" }, { label: "Account Registration" }];
     return [{ label: "Overview", href: "/" }];
   };
 
@@ -95,24 +106,46 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Status Badges & Controls */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             {/* Real-time Engine Status Pill */}
             <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Engines Live: PS1 • PS2 • PS3</span>
             </div>
 
-            {/* Quick Link to 360 Profile */}
-            <Link
-              href={`/students/${userId || "STU001"}`}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition border border-indigo-200/60"
-            >
-              <Sparkles className="w-3 h-3 text-indigo-600" />
-              <span>360° Profile</span>
-            </Link>
+            {/* Quick Link to 360 Profile (only if student or teacher) */}
+            {role === "student" && (
+              <Link
+                href={`/students/${userId || "STU001"}`}
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition border border-indigo-200/60"
+              >
+                <Sparkles className="w-3 h-3 text-indigo-600" />
+                <span>My 360° Profile</span>
+              </Link>
+            )}
 
-            {/* Role Switcher */}
+            {/* Role Switcher Demo Tool */}
             <RoleSwitcher />
+
+            {/* Auth Action Button */}
+            {isAuthenticated ? (
+              <button
+                onClick={() => logout()}
+                title="Sign out of current session"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 hover:text-rose-600 hover:bg-rose-50/50 hover:border-rose-200 transition"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition shadow-xs"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </Link>
+            )}
 
             {/* Mobile Hamburger */}
             <button
@@ -163,6 +196,28 @@ export const Navbar: React.FC = () => {
           >
             Students Directory (360°)
           </Link>
+          <div className="pt-2 border-t border-slate-100 mt-2">
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out ({fullName})</span>
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-xs font-semibold text-indigo-600 hover:bg-indigo-50"
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </header>

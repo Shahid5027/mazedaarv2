@@ -18,12 +18,13 @@ import {
   ChevronRight,
   School,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { useUserRole } from "@/lib/useUserRole";
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { role, fullName, userId } = useUserRole();
+  const { role, fullName, userId, logout } = useUserRole();
   const [collapsed, setCollapsed] = useState(false);
 
   // Grouped Navigation Items with strict Role-Based Access Filtering
@@ -109,7 +110,13 @@ export const Sidebar: React.FC = () => {
           label: "Student Directory",
           href: "/students",
           icon: Users2,
-          roles: ["student", "teacher", "faculty", "counselor", "admin"],
+          roles: ["teacher", "faculty", "counselor", "admin"],
+        },
+        {
+          label: "User Administration",
+          href: "/#user-management",
+          icon: School,
+          roles: ["admin"],
         },
       ],
     },
@@ -210,13 +217,24 @@ export const Sidebar: React.FC = () => {
                 </div>
               </div>
             </div>
-            <Link
-              href={`/students/${userId}`}
-              title="View 360° Profile"
-              className="p-1 rounded text-slate-400 hover:text-indigo-600"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-1">
+              {role === "student" && (
+                <Link
+                  href={`/students/${userId}`}
+                  title="View 360° Profile"
+                  className="p-1 rounded text-slate-400 hover:text-indigo-600 transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </Link>
+              )}
+              <button
+                onClick={() => logout()}
+                title="Sign Out"
+                className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex justify-center">

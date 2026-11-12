@@ -21,17 +21,22 @@ export const RoleSwitcher: React.FC = () => {
 
   const handleRoleChange = async (role: string) => {
     setLoading(true);
-    const res = await api.switchRole(role, role === "student" ? "STU001" : undefined);
-    if (res.success) {
-      setCurrentRole(role);
-      const userRes = await api.getCurrentUser();
-      if (userRes.success && userRes.data) {
-        setUserName(userRes.data.full_name);
+    try {
+      // 1. Issue authentic JWT session for the demo persona
+      const demoRes = await api.demoLogin(role);
+      if (demoRes.success && demoRes.data?.access_token && typeof window !== "undefined") {
+        localStorage.setItem("educore_token", demoRes.data.access_token);
+        localStorage.setItem("educore_user", JSON.stringify(demoRes.data));
       }
+      // 2. Also keep server demo state synchronized
+      await api.switchRole(role, role === "student" ? "STU001" : undefined);
       setIsOpen(false);
       window.location.reload(); // Refresh to ensure active views adapt
+    } catch (err) {
+      console.error("Failed to switch role:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const roleIcons: Record<string, React.ReactNode> = {

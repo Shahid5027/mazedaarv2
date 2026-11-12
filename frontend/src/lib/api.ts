@@ -2,18 +2,36 @@ import { APIResponse } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+function getAuthHeader(): Record<string, string> {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("educore_token");
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  }
+  return {};
+}
+
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<APIResponse<T>> {
   try {
+    const authHeaders = getAuthHeader();
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...(options?.headers || {}),
       },
     });
 
     if (!res.ok) {
       const errorBody = await res.json().catch(() => null);
+      // Handle expired session cleanly
+      if (res.status === 401 && typeof window !== "undefined") {
+        if (!endpoint.includes("/api/auth/login") && !endpoint.includes("/api/auth/demo-login")) {
+          // localStorage.removeItem("educore_token");
+        }
+      }
       throw new Error(errorBody?.message || `API error ${res.status}: ${res.statusText}`);
     }
 
@@ -31,8 +49,63 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<API
 }
 
 export const api = {
-  // System & Health
-  getHealth: () => fetchAPI<any>("/api/health"),
+  // Authentication & Session
+  login: (payload: { username_or_email: string; password: string }) =>
+    fetchAPI<any>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  register: (payload: {
+    full_name: string;
+    email: string;
+    username: string;
+    password: string;
+    role: string;
+    department?: string;
+    semester?: number;
+    student_id?: string;
+  }) =>
+    fetchAPI<any>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  forgotPassword: (email: string) =>
+    fetchAPI<any>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (payload: { token: string; new_password: string }) =>
+    fetchAPI<any>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getMe: () => fetchAPI<any>("/api/auth/me"),
+  logout: () => fetchAPI<any>("/api/auth/logout", { method: "POST" }),
+  getDemoAccounts: () => fetchAPI<any[]>("/api/auth/demo-accounts"),
+  demoLogin: (role: string) =>
+    fetchAPI<any>("/api/auth/demo-login", {
+      method: "POST",
+      body: JSON.stringify({ role }),
+    }),
+
+  // Visual Analytics Dashboards
+  getInstitutionAnalytics: () => fetchAPI<any>("/api/analytics/institution"),
+  getTeacherAnalytics: () => fetchAPI<any>("/api/analytics/teacher"),
+  getStudentAnalytics: (studentId: string) => fetchAPI<any>(`/api/analytics/student/${studentId}`),
+  getCounselorAnalytics: () => fetchAPI<any>("/api/analytics/counselor"),
+
+  // Users & Admin Control
+  getUsers: (role?: string) => fetchAPI<any[]>(`/api/users${role ? `?role=${role}` : ""}`),
+  createAdminUser: (payload: any) =>
+    fetchAPI<any>("/api/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateUserStatus: (userId: string, payload: { is_active?: boolean; role?: string; department?: string }) =>
+    fetchAPI<any>(`/api/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   getCurrentUser: () => fetchAPI<any>("/api/users/current"),
   getRoles: () => fetchAPI<any[]>("/api/users/roles"),
   switchRole: (role: string, studentId?: string) =>
@@ -136,7 +209,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  updateIntervention: (interventionId: string, payload: { status?: string; notes?: string }) =>
+  updateIntervention: (interventionId: string, payload: { status?: string; notes?: string; scheduled_date?: any }) =>
     fetchAPI<any>(`/api/ps3/interventions/${interventionId}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -152,4 +225,3 @@ export const api = {
   getRAGRemediation: (topicId: string, weakConcept: string) =>
     fetchAPI<any>(`/api/ps1/curriculum/remedial-rag?topic_id=${topicId}&weak_concept=${encodeURIComponent(weakConcept)}`),
 };
-

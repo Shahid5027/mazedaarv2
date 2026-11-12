@@ -1,28 +1,138 @@
-from fastapi import APIRouter, Depends, Query
+import datetime
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.database import get_db
-from app.models.entities import User
+from app.models.entities import User, Student
 from app.schemas.common import APIResponse
+from app.auth import get_password_hash, require_role, ACTIVE_DEMO_STATE
 
-router = APIRouter(prefix="/api/users", tags=["Users & Roles"])
-
-# In-memory active demo role tracker for seamless switching
-ACTIVE_DEMO_STATE = {
-    "role": "student",
-    "user_id": "USR_STU1",
-    "student_id": "STU001"
-}
+router = APIRouter(prefix="/api/users", tags=["Users & Administration"])
 
 class RoleSwitchRequest(BaseModel):
     role: str # student, teacher, faculty, counselor, admin
     student_id: Optional[str] = "STU001"
 
+class CreateUserRequest(BaseModel):
+    username: str = Field(..., min_length=3)
+    full_name: str = Field(..., min_length=2)
+    email: str = Field(..., min_length=5)
+    role: str = Field(..., description="admin, teacher, counselor, student")
+    password: str = Field(..., min_length=6)
+    department: Optional[str] = "Computer Science"
+    student_id: Optional[str] = None
+
+class UpdateUserStatusRequest(BaseModel):
+    is_active: Optional[bool] = None
+    role: Optional[str] = None
+    department: Optional[str] = None
+
+@router.get("", response_model=APIResponse[List[dict]])
+def list_users(
+    role: Optional[str] = None,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Admin/Staff view of all institutional accounts."""
+    query = db.query(User)
+    if role:
+        query = query.filter(User.role == role.lower())
+    
+    users = query.order_by(User.created_at.desc()).all()
+    user_list = [
+        {
+            "user_id": u.user_id,
+            "username": u.username,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role,
+            "department": u.department or ("Computer Science" if u.student else "Administration"),
+            "student_id": u.student_id,
+            "is_active": getattr(u, "is_active", True),
+            "created_at": u.created_at.isoformat() if u.created_at else None
+        }
+        for u in users
+    ]
+
+    return APIResponse(
+        success=True,
+        module="system",
+        student_id=None,
+        data=user_list,
+        message=f"Retrieved {len(user_list)} institutional users."
+    )
+
+@router.post("", response_model=APIResponse[dict])
+def admin_create_user(
+    payload: CreateUserRequest,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"]))
+):
+    """Admin-only user creation."""
+    existing = db.query(User).filter(
+        (User.username.ilike(payload.username)) | (User.email.ilike(payload.email))
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username or email already exists.")
+
+    new_user_id = f"USR_{payload.role[:3].upper()}_{int(datetime.datetime.utcnow().timestamp())}"
+    user = User(
+        user_id=new_user_id,
+        username=payload.username.strip(),
+        full_name=payload.full_name.strip(),
+        email=payload.email.strip().lower(),
+        role=payload.role.strip().lower(),
+        department=payload.department,
+        student_id=payload.student_id,
+        hashed_password=get_password_hash(payload.password),
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return APIResponse(
+        success=True,
+        module="system",
+        student_id=user.student_id,
+        data={"user_id": user.user_id, "username": user.username, "role": user.role},
+        message=f"User {user.username} created successfully."
+    )
+
+@router.patch("/{user_id}", response_model=APIResponse[dict])
+def admin_update_user(
+    user_id: str,
+    payload: UpdateUserStatusRequest,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_role(["admin"]))
+):
+    """Admin-only modification of user account status or role."""
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found.")
+
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+    if payload.role is not None:
+        user.role = payload.role.lower()
+    if payload.department is not None:
+        user.department = payload.department
+
+    db.commit()
+
+    return APIResponse(
+        success=True,
+        module="system",
+        student_id=user.student_id,
+        data={"user_id": user.user_id, "role": user.role, "is_active": user.is_active},
+        message=f"User {user_id} updated successfully."
+    )
+
 @router.get("/current", response_model=APIResponse[dict])
-def get_current_user(db: Session = Depends(get_db)):
+def get_current_user_info(db: Session = Depends(get_db)):
     role = ACTIVE_DEMO_STATE["role"]
-    user = db.query(User).filter(User.role == role).first()
+    user = db.query(User).filter(User.role.in_([role, "faculty" if role == "teacher" else role])).first()
     
     user_info = {
         "user_id": user.user_id if user else f"USR_{role.upper()}",
@@ -69,11 +179,16 @@ def switch_demo_role(payload: RoleSwitchRequest, db: Session = Depends(get_db)):
             message=f"Invalid role '{payload.role}'. Must be one of: {valid_roles}"
         )
 
-    ACTIVE_DEMO_STATE["role"] = payload.role.lower()
-    if payload.role.lower() == "student":
+    role = payload.role.lower()
+    ACTIVE_DEMO_STATE["role"] = role
+    if role == "student":
         ACTIVE_DEMO_STATE["student_id"] = payload.student_id or "STU001"
     else:
         ACTIVE_DEMO_STATE["student_id"] = None
+
+    user = db.query(User).filter(User.role.in_([role, "faculty" if role == "teacher" else role])).first()
+    if user:
+        ACTIVE_DEMO_STATE["user_id"] = user.user_id
 
     return APIResponse(
         success=True,
@@ -82,4 +197,3 @@ def switch_demo_role(payload: RoleSwitchRequest, db: Session = Depends(get_db)):
         data=ACTIVE_DEMO_STATE,
         message=f"Switched active demo context to '{payload.role}'"
     )
-

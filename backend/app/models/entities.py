@@ -56,6 +56,11 @@ class User(Base):
     email = Column(String(128), unique=True, nullable=False)
     role = Column(String(32), nullable=False, index=True) # student, teacher, faculty, counselor, admin
     avatar_url = Column(String(255), nullable=True)
+    hashed_password = Column(String(255), nullable=True)
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    department = Column(String(64), nullable=True)
     student_id = Column(String(32), ForeignKey("students.student_id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

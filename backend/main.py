@@ -1,14 +1,23 @@
 import os
 import uvicorn
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import engine, Base
 from app.seed_data import seed_database
-from app.routers import health, students, users, ps1_router, ps2_router, ps3_router
+from app.routers import (
+    health,
+    students,
+    users,
+    auth_router,
+    analytics_router,
+    ps1_router,
+    ps2_router,
+    ps3_router
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,7 +46,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Custom exception handler for standard error JSON structure
+# Standard HTTP exception handler
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers=getattr(exc, "headers", None),
+        content={
+            "success": False,
+            "module": "system",
+            "student_id": None,
+            "data": None,
+            "message": exc.detail
+        }
+    )
+
+# Custom exception handler for unexpected server errors
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -53,6 +77,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include All Module Routers
 app.include_router(health.router)
+app.include_router(auth_router.router)
+app.include_router(analytics_router.router)
 app.include_router(students.router)
 app.include_router(users.router)
 app.include_router(ps1_router.router)

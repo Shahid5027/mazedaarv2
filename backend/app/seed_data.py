@@ -1,18 +1,64 @@
 import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.database import SessionLocal, Base, engine
+from app.auth import get_password_hash
 from app.models.entities import (
     Student, User, Course, Topic, LearningProgress, RemedialResource,
     Assessment, Submission, Evaluation, RiskPrediction, ActivitySnapshot, Intervention
 )
 
+def run_migrations():
+    """Ensures all new schema columns exist in SQLite database without losing data."""
+    with engine.connect() as conn:
+        try:
+            # Check users table columns
+            columns = [col[1] for col in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+            if "hashed_password" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN hashed_password VARCHAR(255)"))
+            if "reset_token" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)"))
+            if "reset_token_expires" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires TIMESTAMP"))
+            if "is_active" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+            if "department" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN department VARCHAR(64)"))
+            conn.commit()
+        except Exception as e:
+            print(f"Migration notice: {e}")
+
+def update_user_passwords(db: Session):
+    """Ensures all seeded and existing demo accounts have secure bcrypt password hashes."""
+    demo_passwords = {
+        "student_demo": "Student@123",
+        "teacher_demo": "Teacher@123",
+        "faculty_demo": "Teacher@123",
+        "counselor_demo": "Counselor@123",
+        "admin_demo": "Admin@123",
+    }
+    for username, pwd in demo_passwords.items():
+        u = db.query(User).filter(User.username == username).first()
+        if u and not u.hashed_password:
+            u.hashed_password = get_password_hash(pwd)
+            u.is_active = True
+            if u.role == "student" and not u.department:
+                u.department = "Computer Science"
+            elif u.role in ["teacher", "faculty"] and not u.department:
+                u.department = "Computer Science"
+            elif not u.department:
+                u.department = "Academic Affairs"
+    db.commit()
+
 def seed_database():
+    run_migrations()
     Base.metadata.create_all(bind=engine)
     db: Session = SessionLocal()
 
-    # If data already exists, skip seeding to avoid duplicate errors
+    # If data already exists, update user passwords and exit
     if db.query(Student).first():
-        print("Database already contains data, skipping seed.")
+        print("Database already contains data; verifying auth passwords...")
+        update_user_passwords(db)
         db.close()
         return
 
@@ -38,11 +84,11 @@ def seed_database():
 
     # 2. Users / Demo Roles
     users_data = [
-        {"user_id": "USR_STU1", "username": "student_demo", "full_name": "Aarav Sharma", "email": "aarav.sharma@educore.edu", "role": "student", "student_id": "STU001"},
-        {"user_id": "USR_TEA1", "username": "teacher_demo", "full_name": "Prof. Rajesh Sengupta", "email": "r.sengupta@educore.edu", "role": "teacher", "student_id": None},
-        {"user_id": "USR_FAC1", "username": "faculty_demo", "full_name": "Dr. Sunita Rao", "email": "s.rao@educore.edu", "role": "faculty", "student_id": None},
-        {"user_id": "USR_CNS1", "username": "counselor_demo", "full_name": "Kavita Deshmukh", "email": "k.deshmukh@educore.edu", "role": "counselor", "student_id": None},
-        {"user_id": "USR_ADM1", "username": "admin_demo", "full_name": "Dean Academic Affairs", "email": "dean@educore.edu", "role": "admin", "student_id": None},
+        {"user_id": "USR_STU1", "username": "student_demo", "full_name": "Aarav Sharma", "email": "aarav.sharma@educore.edu", "role": "student", "student_id": "STU001", "hashed_password": get_password_hash("Student@123"), "is_active": True, "department": "Computer Science"},
+        {"user_id": "USR_TEA1", "username": "teacher_demo", "full_name": "Prof. Rajesh Sengupta", "email": "r.sengupta@educore.edu", "role": "teacher", "student_id": None, "hashed_password": get_password_hash("Teacher@123"), "is_active": True, "department": "Computer Science"},
+        {"user_id": "USR_FAC1", "username": "faculty_demo", "full_name": "Dr. Sunita Rao", "email": "s.rao@educore.edu", "role": "faculty", "student_id": None, "hashed_password": get_password_hash("Teacher@123"), "is_active": True, "department": "Artificial Intelligence"},
+        {"user_id": "USR_CNS1", "username": "counselor_demo", "full_name": "Kavita Deshmukh", "email": "k.deshmukh@educore.edu", "role": "counselor", "student_id": None, "hashed_password": get_password_hash("Counselor@123"), "is_active": True, "department": "Student Welfare"},
+        {"user_id": "USR_ADM1", "username": "admin_demo", "full_name": "Dean Academic Affairs", "email": "dean@educore.edu", "role": "admin", "student_id": None, "hashed_password": get_password_hash("Admin@123"), "is_active": True, "department": "Academic Affairs"},
     ]
     for u in users_data:
         db.add(User(**u))

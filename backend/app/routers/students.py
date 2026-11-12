@@ -6,6 +6,7 @@ from app.models.entities import Student, LearningProgress, Submission, Evaluatio
 from app.schemas.common import APIResponse
 from app.schemas.entities import StudentCreate, StudentUpdate, StudentOut
 from app.engines.ps3_dropout_engine import DropoutPredictionEngine
+from app.auth import get_current_user_optional, require_role, User
 
 router = APIRouter(prefix="/api/students", tags=["Shared Student Core"])
 
@@ -52,10 +53,22 @@ def list_students(
     )
 
 @router.get("/{student_id}", response_model=APIResponse[dict])
-def get_student_360_profile(student_id: str, db: Session = Depends(get_db)):
+def get_student_360_profile(
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     student = db.query(Student).filter(Student.student_id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail=f"Student {student_id} not found")
+
+    # Strict Student privacy enforcement: Students cannot view other students' private records
+    if current_user and current_user.role.lower() == "student":
+        if current_user.student_id and current_user.student_id != student_id:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access Denied: Student account ({current_user.student_id}) cannot access records belonging to {student_id}."
+            )
 
     # PS1 Data: Learning Progress & Mastery
     progresses = db.query(LearningProgress).filter(LearningProgress.student_id == student_id).all()
@@ -180,7 +193,11 @@ def get_student_360_profile(student_id: str, db: Session = Depends(get_db)):
     )
 
 @router.post("", response_model=APIResponse[dict])
-def create_student(payload: StudentCreate, db: Session = Depends(get_db)):
+def create_student(
+    payload: StudentCreate,
+    db: Session = Depends(get_db),
+    authorizer: str = Depends(require_role(["teacher", "admin"]))
+):
     existing = db.query(Student).filter(Student.student_id == payload.student_id).first()
     if existing:
         return APIResponse(
