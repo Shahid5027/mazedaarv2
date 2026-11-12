@@ -41,6 +41,13 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { LoadingState, EmptyState } from "@/components/EmptyState";
 import { RemedialResourceModal } from "@/components/RemedialResourceModal";
 import { InterventionModal } from "@/components/InterventionModal";
+import { VoiceTutorModal } from "@/components/VoiceTutorModal";
+import {
+  Bell,
+  Mic,
+  Calendar,
+  ListTodo,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -76,6 +83,7 @@ export default function DashboardPage() {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
 
   // Modals & UI States
+  const [voiceTutorOpen, setVoiceTutorOpen] = useState(false);
   const [selectedRemedialResource, setSelectedRemedialResource] = useState<any>(null);
   const [remedialModalOpen, setRemedialModalOpen] = useState(false);
   const [interventionModalStudent, setInterventionModalStudent] = useState<{ id: string; name: string } | null>(null);
@@ -190,7 +198,7 @@ export default function DashboardPage() {
   }
 
   // =========================================================================
-  // 1. STUDENT DASHBOARD VIEW
+  // 1. STUDENT DASHBOARD VIEW (PURE GRAPH-FREE INSTITUTIONAL SAAS)
   // =========================================================================
   if (role === "student") {
     const studentCore = studentProfile?.core || {
@@ -199,244 +207,268 @@ export default function DashboardPage() {
       cgpa: 8.7,
       attendance_rate: 92.5,
       department: "Computer Science",
+      semester: 4,
     };
     const overallMastery = studentAnalytics?.overall_mastery || 78.5;
-    const topicMasteryData = studentAnalytics?.topic_mastery || [
-      { topic: "Arrays", full_topic: "Array & Linked Lists", mastery: 92, full_mark: 100 },
-      { topic: "Trees", full_topic: "Tree Structures", mastery: 85, full_mark: 100 },
-      { topic: "BST", full_topic: "Binary Search Trees", mastery: 74, full_mark: 100 },
-      { topic: "Graphs", full_topic: "Graph Algorithms", mastery: 68, full_mark: 100 },
-      { topic: "DP", full_topic: "Dynamic Programming", mastery: 55, full_mark: 100 },
-    ];
-    const quizTrendData = studentAnalytics?.quiz_trend || [
-      { attempt: "Quiz 1", score: 65, topic: "Arrays" },
-      { attempt: "Quiz 2", score: 72, topic: "Trees" },
-      { attempt: "Quiz 3", score: 84, topic: "BST" },
-      { attempt: "Quiz 4", score: 90, topic: "Graphs" },
-    ];
-    const strengths = studentAnalytics?.strengths || ["Data Structures Foundations", "Array Traversal"];
     const weakConcepts = studentAnalytics?.weak_concepts || ["AVL Balance Factor", "DP Tabulation"];
+    const recommendations = studentAnalytics?.recommendations || [
+      { title: "AVL Tree Rotations Interactive Visualizer", type: "Visualizer", estimated_minutes: 15 },
+      { title: "Bellman-Ford Negative Cycle Detection", type: "Micro-Lecture", estimated_minutes: 10 },
+    ];
     const activityHistory = studentAnalytics?.activity_history || [];
-    const recommendations = studentAnalytics?.recommendations || [];
 
     return (
       <div className="space-y-6">
-        {/* Welcome Header */}
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
-                Personal Student Portal
-              </span>
-              <span className="text-xs text-indigo-200 font-mono">ID: {studentCore.student_id}</span>
+        {/* Welcome / Profile Summary Header */}
+        <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center shrink-0 text-base shadow-xs">
+              {studentCore.full_name?.charAt(0) || "S"}
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              Welcome back, {studentCore.full_name}!
-            </h1>
-            <p className="text-xs text-slate-300 max-w-xl">
-              Your personalized adaptive learning trajectory, automated mastery tracking, and evaluation insights.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">{studentCore.full_name}</h1>
+                <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold font-mono">
+                  {studentCore.student_id}
+                </span>
+                <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium border border-emerald-200">
+                  Enrolled • Semester {studentCore.semester || 4}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Department of {studentCore.department || "Computer Science"} • Academic Standing: First Class
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setVoiceTutorOpen(true)}
+              className="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-xs flex items-center gap-1.5"
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>Voice AI Tutor (ಕನ್ನಡ • हिन्दी • EN)</span>
+            </button>
             <Link
               href="/ps1-adaptive"
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition shadow-xs flex items-center gap-1.5"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <BookOpen className="w-3.5 h-3.5" />
               <span>Continue Learning</span>
             </Link>
           </div>
         </div>
 
-        {/* Top Metric Cards */}
+        {/* Simple Institutional Stats Strip (Graph-Free Plain Statistics) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard
-            title="Curriculum Mastery"
-            value={`${overallMastery}%`}
-            subtitle="Bayesian Knowledge Trace"
-            variant="brand"
-            icon={GraduationCap}
-          />
-          <MetricCard
-            title="Current CGPA"
-            value={studentCore.cgpa?.toFixed(2) || "8.70"}
-            subtitle="Academic Standing: Good"
-            variant="default"
-            icon={Award}
-          />
-          <MetricCard
-            title="Attendance Rate"
-            value={`${studentCore.attendance_rate || 92.5}%`}
-            subtitle="Target: ≥ 85.0%"
-            variant={studentCore.attendance_rate < 75 ? "danger" : "default"}
-            icon={Activity}
-          />
-          <MetricCard
-            title="Active Weak Concepts"
-            value={weakConcepts.length}
-            subtitle="Targeted for RAG practice"
-            variant={weakConcepts.length > 2 ? "warning" : "default"}
-            icon={AlertTriangle}
-          />
-        </div>
+          <div className="p-4 rounded-xl border border-slate-200 bg-white">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Attendance Rate</p>
+            <p className="text-xl font-bold text-slate-900 mt-1">{studentCore.attendance_rate || 92.5}%</p>
+            <p className="text-[11px] text-emerald-600 font-medium mt-0.5">37 / 40 Days Present (Compliant)</p>
+          </div>
 
-        {/* Visual Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Topic-Wise Mastery Graph */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <BarChart3 className="w-4 h-4 text-indigo-600" />
-                  <span>Topic-Wise Mastery Performance</span>
-                </h3>
-                <p className="text-xs text-slate-500">Mastery score (0-100) per curriculum concept</p>
-              </div>
-              <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">
-                Target: 80%
-              </span>
-            </div>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topicMasteryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="topic" tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "8px", fontSize: "11px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                    formatter={(val: any) => [`${val}%`, "Mastery"]}
-                    labelFormatter={(label) => `Topic: ${label}`}
-                  />
-                  <Bar dataKey="mastery" radius={[4, 4, 0, 0]}>
-                    {topicMasteryData.map((entry: any, index: number) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.mastery >= 80 ? "#10b981" : entry.mastery >= 60 ? "#6366f1" : "#f59e0b"}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="p-4 rounded-xl border border-slate-200 bg-white">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Cumulative CGPA</p>
+            <p className="text-xl font-bold text-slate-900 mt-1">{studentCore.cgpa?.toFixed(2) || "8.70"}</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Scale: 0.0 - 10.0</p>
+          </div>
+
+          <div className="p-4 rounded-xl border border-slate-200 bg-white">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Curriculum Mastery</p>
+            <p className="text-xl font-bold text-slate-900 mt-1">{overallMastery}%</p>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${overallMastery}%` }} />
             </div>
           </div>
 
-          {/* Formative Quiz Performance Over Time */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <LineIcon className="w-4 h-4 text-emerald-600" />
-                  <span>Quiz Performance Trajectory</span>
-                </h3>
-                <p className="text-xs text-slate-500">Longitudinal score progression across quiz attempts</p>
-              </div>
-              <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">
-                Upward Trend
-              </span>
-            </div>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={quizTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="attempt" tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "8px", fontSize: "11px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                    formatter={(val: any) => [`${val}%`, "Score"]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#10b981"
-                    strokeWidth={2.5}
-                    dot={{ r: 4, fill: "#10b981" }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="p-4 rounded-xl border border-slate-200 bg-white">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pending Action Items</p>
+            <p className="text-xl font-bold text-slate-900 mt-1">2 Items</p>
+            <p className="text-[11px] text-amber-600 font-medium mt-0.5">1 Assignment • 1 Quiz Review</p>
           </div>
         </div>
 
-        {/* Strengths & Weak Concepts Actionable Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Verified Concept Strengths</span>
-              </h3>
-              <span className="text-xs text-slate-400">Mastery ≥ 80%</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {strengths.map((str: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-1"
-                >
-                  <Check className="w-3 h-3 text-emerald-600" />
-                  <span>{str}</span>
-                </span>
-              ))}
-            </div>
+        {/* Notifications Ribbon */}
+        <div className="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/60 flex items-center justify-between text-xs text-indigo-950">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="font-medium">
+              Lab 2 evaluation completed by Prof. Sengupta. Approved grade: <strong>88/100</strong>.
+            </span>
           </div>
-
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4 text-amber-600" />
-                <span>Areas for Targeted Remediation</span>
-              </h3>
-              <Link
-                href="/ps1-adaptive#remediation"
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-              >
-                Open Practice →
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {weakConcepts.map((wc: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-1"
-                >
-                  <AlertTriangle className="w-3 h-3 text-amber-600" />
-                  <span>{wc}</span>
-                </span>
-              ))}
-            </div>
-          </div>
+          <Link href="/students/STU001?tab=assessments" className="font-semibold text-indigo-700 hover:text-indigo-900 underline text-xs">
+            Review Marks Breakdown
+          </Link>
         </div>
 
-        {/* Chronological Activity Timeline */}
-        <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-indigo-600" />
-            <span>Chronological Learning Activity History</span>
-          </h3>
+        {/* Enrolled Courses & Topic Progress Bars (Graph-Free) */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Enrolled Courses & Topic Progress</h2>
+              <p className="text-xs text-slate-500">Curriculum concept mastery tracked via Bayesian Knowledge Tracing</p>
+            </div>
+            <Link href="/ps1-adaptive" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+              Open Full Syllabus →
+            </Link>
+          </div>
+
           <div className="space-y-3">
-            {activityHistory.map((item: any, idx: number) => (
-              <div
-                key={idx}
-                className="p-3 rounded-lg border border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3 text-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <div>
-                    <p className="font-semibold text-slate-800">{item.action}</p>
-                    <p className="text-[11px] text-slate-500">{item.topic}</p>
+            {[
+              { name: "Array & Linked List Invariants", mastery: 92, status: "Mastered", color: "bg-emerald-500" },
+              { name: "Stack & Queue Structures", mastery: 85, status: "Mastered", color: "bg-emerald-500" },
+              { name: "Binary Search Tree Traversals", mastery: 74, status: "In Progress", color: "bg-indigo-500" },
+              { name: "AVL Tree Rotations & Balance Factor", mastery: 62, status: "Needs Practice", color: "bg-amber-500" },
+              { name: "Dynamic Programming Tabulation", mastery: 50, status: "Needs Review", color: "bg-rose-500" },
+            ].map((topicItem, idx) => (
+              <div key={idx} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1 min-w-[200px]">
+                  <p className="font-semibold text-slate-800">{topicItem.name}</p>
+                  <span className={`editorial-tag text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+                    topicItem.mastery >= 80 ? "bg-emerald-50 text-emerald-700" : topicItem.mastery >= 65 ? "bg-indigo-50 text-indigo-700" : "bg-amber-50 text-amber-700"
+                  }`}>
+                    {topicItem.status}
+                  </span>
+                </div>
+
+                <div className="flex-1 max-w-xs">
+                  <div className="flex items-center justify-between text-[11px] mb-1 text-slate-600">
+                    <span>Mastery Level</span>
+                    <span className="font-bold">{topicItem.mastery}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div className={`${topicItem.color} h-2 rounded-full`} style={{ width: `${topicItem.mastery}%` }} />
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-right">
-                  <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
-                    {item.badge}
-                  </span>
-                  <span className="text-slate-400 text-[11px]">{item.date}</span>
-                </div>
+
+                <Link
+                  href="/ps1-adaptive"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-white text-slate-700 font-semibold text-[11px] transition text-center shrink-0"
+                >
+                  Study Concept
+                </Link>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Two-Column Grid: Assessments & Weak Concepts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Pending Assessments & Recent Results */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <FileCheck2 className="w-4 h-4 text-indigo-600" />
+              <span>Assessments & Results</span>
+            </h2>
+            <div className="space-y-2.5">
+              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-semibold text-slate-800">Lab 2: Binary Search Tree Invariants</p>
+                  <p className="text-[11px] text-slate-500">Graded by SentenceTransformer AI • Moderated</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-emerald-600">88 / 100</span>
+                  <p className="text-[10px] text-slate-400">Nov 10, 2026</p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-semibold text-slate-800">Assignment 3: Dynamic Programming Memoization</p>
+                  <p className="text-[11px] text-amber-600 font-medium">Pending Faculty Moderation</p>
+                </div>
+                <div className="text-right">
+                  <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold">
+                    In Review
+                  </span>
+                  <p className="text-[10px] text-slate-400">Due Nov 15</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Targeted Remediation (Weak Concepts) */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <span>Weak Concepts Requiring Attention</span>
+              </h2>
+              <span className="text-xs text-slate-400">Diagnosed via Quizzes</span>
+            </div>
+            <div className="space-y-2.5">
+              {weakConcepts.map((concept: string, idx: number) => (
+                <div key={idx} className="p-3 rounded-lg border border-amber-100 bg-amber-50/40 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-slate-800">{concept}</p>
+                    <p className="text-[11px] text-slate-500">Suggested remediation: 15 min interactive practice</p>
+                  </div>
+                  <Link
+                    href="/ps1-adaptive#remediation"
+                    className="px-2.5 py-1 rounded bg-white border border-amber-200 text-amber-800 font-semibold text-[11px] hover:bg-amber-50 transition"
+                  >
+                    Start Review
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Personalized Recommendations & Recent Activity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Recommended Next Steps</span>
+            </h2>
+            <div className="space-y-2.5">
+              {recommendations.map((rec: any, idx: number) => (
+                <div key={idx} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-slate-800">{rec.title}</p>
+                    <p className="text-[11px] text-slate-500">{rec.type} • ~{rec.estimated_minutes} mins</p>
+                  </div>
+                  <Link
+                    href="/ps1-adaptive"
+                    className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-[11px] transition"
+                  >
+                    Begin
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-slate-600" />
+              <span>Recent Activity History</span>
+            </h2>
+            <div className="space-y-2.5">
+              {activityHistory.slice(0, 3).map((item: any, idx: number) => (
+                <div key={idx} className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-slate-800">{item.action}</p>
+                    <p className="text-[11px] text-slate-500">{item.topic}</p>
+                  </div>
+                  <span className="editorial-tag text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 font-semibold border border-slate-200">
+                    {item.badge}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Voice Tutor Modal */}
+        <VoiceTutorModal
+          isOpen={voiceTutorOpen}
+          onClose={() => setVoiceTutorOpen(false)}
+          studentId={studentCore.student_id}
+          topicName="Data Structures & Algorithms"
+          defaultLang="kn-IN"
+        />
       </div>
     );
   }

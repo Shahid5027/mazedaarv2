@@ -44,6 +44,25 @@ export const FeedbackBreakdown: React.FC<FeedbackBreakdownProps> = ({
     suggestions = [],
   } = feedback;
 
+  const renderConceptItem = (item: any) => {
+    if (typeof item === "string") return item;
+    if (!item) return "";
+    if (typeof item === "object") {
+      const mainText = item.concept || item.text || item.title || item.name || item.descriptor || "";
+      const subText = item.explanation || item.reason || item.detail || item.evidence || "";
+      if (mainText && subText) {
+        return (
+          <span>
+            <strong className="font-semibold">{mainText}</strong>: {subText}
+          </span>
+        );
+      }
+      if (mainText) return mainText;
+      return JSON.stringify(item);
+    }
+    return String(item);
+  };
+
   const hasAnyEntries =
     (correct_concepts && correct_concepts.length > 0) ||
     (missing_concepts && missing_concepts.length > 0) ||
@@ -70,7 +89,7 @@ export const FeedbackBreakdown: React.FC<FeedbackBreakdownProps> = ({
           <ul className="space-y-1.5 pl-6 list-disc text-emerald-950 font-sans">
             {correct_concepts.map((item, idx) => (
               <li key={idx} className="leading-relaxed">
-                {typeof item === "string" ? item : String(item)}
+                {renderConceptItem(item)}
               </li>
             ))}
           </ul>
@@ -87,7 +106,7 @@ export const FeedbackBreakdown: React.FC<FeedbackBreakdownProps> = ({
           <ul className="space-y-1.5 pl-6 list-disc text-amber-950 font-sans">
             {missing_concepts.map((item, idx) => (
               <li key={idx} className="leading-relaxed">
-                {typeof item === "string" ? item : String(item)}
+                {renderConceptItem(item)}
               </li>
             ))}
           </ul>
@@ -104,7 +123,7 @@ export const FeedbackBreakdown: React.FC<FeedbackBreakdownProps> = ({
           <ul className="space-y-1.5 pl-6 list-disc text-rose-950 font-sans">
             {incorrect_concepts.map((item, idx) => (
               <li key={idx} className="leading-relaxed">
-                {typeof item === "string" ? item : String(item)}
+                {renderConceptItem(item)}
               </li>
             ))}
           </ul>
@@ -121,7 +140,7 @@ export const FeedbackBreakdown: React.FC<FeedbackBreakdownProps> = ({
           <ul className="space-y-1.5 pl-6 list-disc text-indigo-950 font-sans">
             {suggestions.map((item, idx) => (
               <li key={idx} className="leading-relaxed">
-                {typeof item === "string" ? item : String(item)}
+                {renderConceptItem(item)}
               </li>
             ))}
           </ul>

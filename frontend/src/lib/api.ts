@@ -224,4 +224,9 @@ export const api = {
   getGradingEngineInfo: () => fetchAPI<any>("/api/ps2/engine-info"),
   getRAGRemediation: (topicId: string, weakConcept: string) =>
     fetchAPI<any>(`/api/ps1/curriculum/remedial-rag?topic_id=${topicId}&weak_concept=${encodeURIComponent(weakConcept)}`),
+  queryVoiceTutor: (payload: { student_id: string; question: string; language: string; topic_id?: string }) =>
+    fetchAPI<any>("/api/ps1/voice-tutor", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };

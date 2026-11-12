@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Shield,
   Layers,
+  Mic,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -32,6 +33,7 @@ import { SpeechPlayer } from "@/components/SpeechPlayer";
 import { MetricCard } from "@/components/MetricCard";
 import { LoadingState } from "@/components/EmptyState";
 import { useUserRole } from "@/lib/useUserRole";
+import { VoiceTutorModal } from "@/components/VoiceTutorModal";
 
 export default function AdaptiveLearningPage() {
   const { role, userId } = useUserRole();
@@ -44,6 +46,7 @@ export default function AdaptiveLearningPage() {
 
   // Modals & Voice State
   const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [voiceTutorOpen, setVoiceTutorOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [ragData, setRagData] = useState<any>(null);
   const [ragLoading, setRagLoading] = useState(false);
@@ -135,20 +138,29 @@ export default function AdaptiveLearningPage() {
           </p>
         </div>
 
-        {/* Active Student Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500">Student Persona:</span>
-          <select
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white text-slate-800 shadow-sm focus:border-indigo-500 focus-ring"
+        {/* Active Student Selector & Voice Tutor Launcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setVoiceTutorOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-sm flex items-center gap-1.5"
           >
-            <option value="STU001">STU001 — Aarav Sharma (88% Mastery)</option>
-            <option value="STU002">STU002 — Priya Patel (48% Mastery)</option>
-            <option value="STU003">STU003 — Rohan Verma (38% Mastery)</option>
-            <option value="STU004">STU004 — Ananya Iyer (94% Mastery)</option>
-            <option value="STU009">STU009 — Vikram Singh (30% Mastery)</option>
-          </select>
+            <Mic className="w-3.5 h-3.5 text-indigo-200 animate-pulse" />
+            <span>Launch Conversational Voice Tutor</span>
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-500 hidden sm:inline">Persona:</span>
+            <select
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white text-slate-800 shadow-sm focus:border-indigo-500 focus-ring"
+            >
+              <option value="STU001">STU001 — Aarav Sharma (88% Mastery)</option>
+              <option value="STU002">STU002 — Priya Patel (48% Mastery)</option>
+              <option value="STU003">STU003 — Rohan Verma (38% Mastery)</option>
+              <option value="STU004">STU004 — Ananya Iyer (94% Mastery)</option>
+              <option value="STU009">STU009 — Vikram Singh (30% Mastery)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -487,6 +499,16 @@ export default function AdaptiveLearningPage() {
           onClose={() => setSelectedResource(null)}
         />
       )}
+
+      {/* Conversational Voice AI Tutor Modal */}
+      <VoiceTutorModal
+        isOpen={voiceTutorOpen}
+        onClose={() => setVoiceTutorOpen(false)}
+        studentId={studentId}
+        topicId={selectedTopic?.topic_id}
+        topicName={selectedTopic?.name}
+        defaultLang="kn-IN"
+      />
     </div>
   );
 }

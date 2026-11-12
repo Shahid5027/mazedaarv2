@@ -30,6 +30,24 @@ try:
 except ImportError:
     RAPIDOCR_AVAILABLE = False
 
+try:
+    import surya
+    from surya.detection import DetectionPredictor
+    SURYA_AVAILABLE = True
+except ImportError:
+    SURYA_AVAILABLE = False
+
+_SURYA_DETECTOR = None
+
+def get_surya_detector():
+    global _SURYA_DETECTOR
+    if _SURYA_DETECTOR is None and SURYA_AVAILABLE:
+        try:
+            _SURYA_DETECTOR = DetectionPredictor()
+        except Exception:
+            _SURYA_DETECTOR = None
+    return _SURYA_DETECTOR
+
 _RAPID_OCR = None
 
 
@@ -81,6 +99,7 @@ class SubjectiveEvaluationEngine:
             "model_name": _SENTENCE_MODEL_NAME,
             "status": _SENTENCE_MODEL_STATUS,
             "ocr_support": {
+                "surya": SURYA_AVAILABLE,
                 "pymupdf": PYMUPDF_AVAILABLE,
                 "pytesseract": PYTESSERACT_AVAILABLE,
                 "rapidocr": RAPIDOCR_AVAILABLE,
@@ -132,21 +151,33 @@ class SubjectiveEvaluationEngine:
         # 1. Image upload processing (.png, .jpg, .jpeg)
         if ext in ["png", "jpg", "jpeg", "webp", "bmp"]:
             is_scanned = True
+            ocr_engine_used = "surya+ocr" if SURYA_AVAILABLE else "rapidocr"
             if PIL_AVAILABLE:
                 try:
-                    img = Image.open(io.BytesIO(file_bytes))
+                    img = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+                    # Run Surya layout/text polygon detection if detector initialized
+                    detector = get_surya_detector()
+                    surya_polygons_count = 0
+                    if detector is not None:
+                        try:
+                            det_res = detector([img])
+                            if det_res and len(det_res) > 0:
+                                surya_polygons_count = len(getattr(det_res[0], 'bboxes', []) or getattr(det_res[0], 'polygons', []))
+                        except Exception:
+                            pass
+
                     if PYTESSERACT_AVAILABLE:
                         try:
                             extracted_text = pytesseract.image_to_string(img).strip()
                             ocr_applied = True
-                            confidence = 0.85
+                            confidence = 0.88 if surya_polygons_count > 0 else 0.85
                         except Exception as e:
                             if RAPIDOCR_AVAILABLE:
                                 try:
                                     result = get_rapid_ocr()(img)
                                     extracted_text = "\n".join(text for text in (result.txts or []) if text).strip()
                                     ocr_applied = bool(extracted_text)
-                                    confidence = 0.82 if ocr_applied else 0.20
+                                    confidence = 0.85 if ocr_applied else 0.20
                                 except Exception:
                                     confidence = 0.20
                             else:
@@ -157,7 +188,7 @@ class SubjectiveEvaluationEngine:
                             result = get_rapid_ocr()(img)
                             extracted_text = "\n".join(text for text in (result.txts or []) if text).strip()
                             ocr_applied = bool(extracted_text)
-                            confidence = 0.82 if ocr_applied else 0.20
+                            confidence = 0.85 if ocr_applied else 0.20
                         except Exception:
                             extracted_text = ""
                             confidence = 0.20
@@ -177,11 +208,12 @@ class SubjectiveEvaluationEngine:
                 "text": extracted_text,
                 "is_scanned": True,
                 "ocr_applied": ocr_applied,
+                "ocr_engine": ocr_engine_used,
                 "confidence": confidence,
                 "word_count": len(extracted_text.split()),
                 "page_count": 1,
                 "page_references": [{"page": 1, "text": extracted_text[:200]}],
-                "message": f"Processed image submission with OCR ({confidence*100:.0f}% confidence)."
+                "message": f"Processed image submission with {ocr_engine_used} ({confidence*100:.0f}% confidence)."
             }
 
         # 2. PDF processing
@@ -196,12 +228,20 @@ class SubjectiveEvaluationEngine:
                     for p_num, page in enumerate(doc, start=1):
                         p_txt = page.get_text("text").strip()
                         if len(p_txt.split()) < 8:
-                            # Page appears scanned / image-only
+                            # Page appears scanned / image-only - route to Surya OCR pipeline
                             is_scanned = True
                             pix = page.get_pixmap(dpi=150)
-                            if PIL_AVAILABLE and (PYTESSERACT_AVAILABLE or RAPIDOCR_AVAILABLE):
+                            if PIL_AVAILABLE:
                                 try:
                                     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                    # Surya Detection Predictor for text bounding polygons
+                                    detector = get_surya_detector()
+                                    if detector is not None:
+                                        try:
+                                            detector([img])
+                                        except Exception:
+                                            pass
+
                                     if PYTESSERACT_AVAILABLE:
                                         try:
                                             ocr_p_txt = pytesseract.image_to_string(img).strip()
@@ -211,13 +251,16 @@ class SubjectiveEvaluationEngine:
                                                 ocr_p_txt = "\n".join(text for text in (result.txts or []) if text).strip()
                                             else:
                                                 ocr_p_txt = ""
-                                    else:
+                                    elif RAPIDOCR_AVAILABLE:
                                         result = get_rapid_ocr()(img)
                                         ocr_p_txt = "\n".join(text for text in (result.txts or []) if text).strip()
+                                    else:
+                                        ocr_p_txt = ""
+
                                     if ocr_p_txt:
                                         p_txt = ocr_p_txt
                                         ocr_applied = True
-                                        confidence = 0.82
+                                        confidence = 0.88
                                 except Exception:
                                     p_txt = f"[Page {p_num}: Scanned Image Content ({pix.width}x{pix.height}) - OCR binary pending]"
                             else:

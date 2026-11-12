@@ -53,14 +53,22 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     # Helpful alias map for standard demo usernames/emails
     demo_aliases = {
         "admin@educore.edu": "dean@educore.edu",
+        "admin@educore.demo": "dean@educore.edu",
+        "dean@educore.demo": "dean@educore.edu",
+        "dean@educore.edu": "dean@educore.edu",
+        "dean": "admin_demo",
         "admin": "admin_demo",
         "teacher@educore.edu": "r.sengupta@educore.edu",
+        "teacher@educore.demo": "r.sengupta@educore.edu",
         "teacher": "teacher_demo",
         "faculty@educore.edu": "s.rao@educore.edu",
+        "faculty@educore.demo": "s.rao@educore.edu",
         "faculty": "faculty_demo",
         "student@educore.edu": "aarav.sharma@educore.edu",
+        "student@educore.demo": "aarav.sharma@educore.edu",
         "student": "student_demo",
         "counselor@educore.edu": "k.deshmukh@educore.edu",
+        "counselor@educore.demo": "k.deshmukh@educore.edu",
         "counselor": "counselor_demo"
     }
     resolved_identity = demo_aliases.get(identity, identity)
@@ -374,7 +382,7 @@ def get_demo_accounts():
         {
             "role": "admin",
             "name": "Dean Academic Affairs",
-            "email": "admin@educore.edu",
+            "email": "dean@educore.demo",
             "username": "admin_demo",
             "password": "Admin@123",
             "description": "Full institutional telemetry, academic audits & user control"
@@ -382,7 +390,7 @@ def get_demo_accounts():
         {
             "role": "teacher",
             "name": "Prof. Rajesh Sengupta",
-            "email": "teacher@educore.edu",
+            "email": "teacher@educore.demo",
             "username": "teacher_demo",
             "password": "Teacher@123",
             "description": "Curriculum management, subjective rubric AI grading & moderation"
@@ -390,15 +398,15 @@ def get_demo_accounts():
         {
             "role": "student",
             "name": "Aarav Sharma (STU001)",
-            "email": "student@educore.edu",
+            "email": "student@educore.demo",
             "username": "student_demo",
             "password": "Student@123",
-            "description": "Personal adaptive learning path, quizzes, submissions & 360 profile"
+            "description": "Personal adaptive learning path, voice tutor, & student hub"
         },
         {
             "role": "counselor",
             "name": "Kavita Deshmukh",
-            "email": "counselor@educore.edu",
+            "email": "counselor@educore.demo",
             "username": "counselor_demo",
             "password": "Counselor@123",
             "description": "Cohort risk heatmap, SHAP explainability & student retention tasks"

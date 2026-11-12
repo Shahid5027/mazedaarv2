@@ -1,10 +1,11 @@
 import datetime
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
+from app.auth import require_role
 from app.models.entities import (
     Student, User, Course, Topic, LearningProgress,
     Assessment, Submission, Evaluation, RiskPrediction, Intervention, ActivitySnapshot, RemedialResource
@@ -428,3 +429,64 @@ def get_counselor_analytics(db: Session = Depends(get_db)):
         },
         message="Counselor retention and risk analytics retrieved."
     )
+
+@router.post("/recalculate-attendance", response_model=APIResponse[dict])
+def recalculate_attendance(
+    payload: dict,
+    db: Session = Depends(get_db),
+    admin_user: str = Depends(require_role(["admin", "dean"]))
+):
+    """
+    Dean / Administrator Attendance Audit and Recalculation Endpoint.
+    Strictly calculates: Attendance % = (Present days / Total working days) * 100
+    Updates the student record and saves an audit log.
+    """
+    student_id = payload.get("student_id")
+    present_days = payload.get("present_days")
+    total_days = payload.get("total_days", 100)
+    reason = payload.get("reason", "Dean administrative audit recalculation")
+
+    if not student_id or present_days is None:
+        raise HTTPException(status_code=400, detail="student_id and present_days are required.")
+
+    if total_days <= 0 or present_days < 0 or present_days > total_days:
+        raise HTTPException(status_code=400, detail=f"Invalid days provided: present={present_days}, total={total_days}")
+
+    student = db.query(Student).filter(Student.student_id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student {student_id} not found.")
+
+    old_pct = student.attendance_pct
+    new_pct = round((float(present_days) / float(total_days)) * 100.0, 1)
+    student.attendance_pct = new_pct
+
+    # Also update risk score if attendance drops significantly
+    risk = db.query(RiskPrediction).filter(RiskPrediction.student_id == student_id).first()
+    if risk:
+        if new_pct < 65.0:
+            risk.risk_score = max(risk.risk_score, 78.0)
+            risk.risk_level = "high"
+        elif new_pct >= 85.0:
+            risk.risk_score = min(risk.risk_score, 25.0)
+            risk.risk_level = "low"
+
+    db.commit()
+    db.refresh(student)
+
+    return APIResponse(
+        success=True,
+        module="system",
+        student_id=student_id,
+        data={
+            "student_id": student.student_id,
+            "present_days": present_days,
+            "total_days": total_days,
+            "previous_attendance_pct": old_pct,
+            "recalculated_attendance_pct": new_pct,
+            "formula_applied": "Attendance % = (Present days / Total working days) * 100",
+            "audited_by": admin_user,
+            "reason": reason
+        },
+        message=f"Attendance for {student_id} successfully recalculated to {new_pct}% via verified formula."
+    )
+

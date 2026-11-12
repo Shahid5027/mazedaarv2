@@ -10,6 +10,7 @@ from sqlalchemy import (
     Text,
     JSON,
     Index
+    ,UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -185,6 +186,29 @@ class Submission(Base):
     student = relationship("Student", back_populates="submissions")
     assessment = relationship("Assessment", back_populates="submissions")
     evaluation = relationship("Evaluation", back_populates="submission", uselist=False, cascade="all, delete-orphan")
+    pages = relationship("SubmissionPage", back_populates="submission", cascade="all, delete-orphan", order_by="SubmissionPage.page_number")
+
+
+class SubmissionPage(Base):
+    """Page-level source OCR and teacher-confirmed text for an answer submission."""
+    __tablename__ = "submission_pages"
+    __table_args__ = (UniqueConstraint("submission_id", "page_number", name="uq_submission_page_number"),)
+
+    page_id = Column(String(64), primary_key=True, index=True)
+    submission_id = Column(String(64), ForeignKey("submissions.submission_id", ondelete="CASCADE"), nullable=False, index=True)
+    page_number = Column(Integer, nullable=False)
+    original_image_path = Column(String(512), nullable=True)
+    extraction_method = Column(String(64), nullable=False, default="unknown")
+    raw_ocr_text = Column(Text, nullable=False, default="")
+    corrected_text = Column(Text, nullable=False, default="")
+    confidence = Column(Float, nullable=True)
+    warnings = Column(JSON, default=list)
+    review_status = Column(String(32), nullable=False, default="needs_review")
+    reviewed_by = Column(String(128), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    submission = relationship("Submission", back_populates="pages")
 
 
 class Evaluation(Base):
