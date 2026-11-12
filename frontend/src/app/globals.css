@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 248 250 252; /* slate-50 #f8fafc */
+    --surface: 255 255 255; /* white */
+    --surface-hover: 241 245 249; /* slate-100 */
+    --surface-subtle: 248 250 252; /* slate-50 */
+    --surface-card: 255 255 255;
+    --border: 226 232 240; /* slate-200 */
+    --border-subtle: 241 245 249; /* slate-100 */
+    --border-focus: 99 102 241; /* indigo-500 */
+
+    --text-primary: 15 23 42; /* slate-900 */
+    --text-secondary: 71 85 105; /* slate-600 */
+    --text-muted: 148 163 184; /* slate-400 */
+    --text-inverted: 255 255 255;
+
+    --brand: 79 70 229; /* indigo-600 */
+    --brand-light: 238 242 255; /* indigo-50 */
+    --brand-accent: 14 165 233; /* sky-500 */
+
+    --success: 16 185 129; /* emerald-500 */
+    --success-subtle: 236 253 245; /* emerald-50 */
+    --warning: 245 158 11; /* amber-500 */
+    --warning-subtle: 254 243 199; /* amber-50 */
+    --danger: 239 68 68; /* red-500 */
+    --danger-subtle: 254 242 242; /* red-50 */
+  }
+
+  body {
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--background));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "salt", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Editorial Minimal card and surface styles */
+.editorial-card {
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-card:hover {
+  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+}
+
+.editorial-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Clean focus ring */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid rgb(var(--border-focus));
+  outline-offset: 2px;
+}

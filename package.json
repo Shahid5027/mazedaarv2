@@ -1,0 +1,15 @@
+{
+  "name": "educore-ai-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root workspace runner for EDUCORE AI",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "frontend": "npm --prefix frontend run dev",
+    "backend": "powershell -ExecutionPolicy Bypass -Command \"$env:PYTHONPATH='backend'; .\\backend\\venv\\Scripts\\python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload\"",
+    "test": "powershell -ExecutionPolicy Bypass -Command \"$env:PYTHONPATH='backend'; .\\backend\\venv\\Scripts\\python backend\\test_api.py\""
+  }
+}
+

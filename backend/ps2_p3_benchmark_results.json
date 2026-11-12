@@ -1,0 +1,421 @@
+{
+  "benchmark_name": "PS2 Phase 3 SentenceTransformer Grading Benchmark",
+  "model": "all-MiniLM-L6-v2",
+  "sample_count": 15,
+  "total_max_marks": 30.0,
+  "phase3_mae": 5.02,
+  "phase21_mae": 2.84,
+  "overall_mae_percentage": 16.7,
+  "criterion_mae": {
+    "technical_accuracy": 2.37,
+    "conceptual_depth": 2.34,
+    "clarity_edge_cases": 0.75
+  },
+  "samples": [
+    {
+      "sample_id": "SA-STR-01",
+      "category": "Strong",
+      "human_marks": 28.5,
+      "ai_marks": 29.0,
+      "max_marks": 30.0,
+      "abs_difference": 0.5,
+      "semantic_similarity": 0.842,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.5,
+          "ai": 15.0,
+          "diff": 0.5
+        },
+        "conceptual_depth": {
+          "human": 9.5,
+          "ai": 9.6,
+          "diff": 0.1
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 4.4,
+          "diff": 0.1
+        }
+      },
+      "evidence_extracted": "To restore the balance invariant, four rotations are used: LL case requires a si..."
+    },
+    {
+      "sample_id": "SA-STR-02",
+      "category": "Strong",
+      "human_marks": 27.5,
+      "ai_marks": 27.2,
+      "max_marks": 30.0,
+      "abs_difference": 0.3,
+      "semantic_similarity": 0.82,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.0,
+          "ai": 15.0,
+          "diff": 1.0
+        },
+        "conceptual_depth": {
+          "human": 9.0,
+          "ai": 9.4,
+          "diff": 0.4
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 2.8,
+          "diff": 1.7
+        }
+      },
+      "evidence_extracted": "LL and RR are single rotations (right and left respectively)..."
+    },
+    {
+      "sample_id": "SA-STR-03",
+      "category": "Strong",
+      "human_marks": 27.5,
+      "ai_marks": 28.3,
+      "max_marks": 30.0,
+      "abs_difference": 0.8,
+      "semantic_similarity": 0.824,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.0,
+          "ai": 14.6,
+          "diff": 0.6
+        },
+        "conceptual_depth": {
+          "human": 9.5,
+          "ai": 9.4,
+          "diff": 0.1
+        },
+        "clarity_edge_cases": {
+          "human": 4.0,
+          "ai": 4.3,
+          "diff": 0.3
+        }
+      },
+      "evidence_extracted": "Imbalance is corrected by four rotations: Single Right Rotation fixes LL, Single..."
+    },
+    {
+      "sample_id": "SA-STR-04",
+      "category": "Strong",
+      "human_marks": 27.0,
+      "ai_marks": 27.8,
+      "max_marks": 30.0,
+      "abs_difference": 0.8,
+      "semantic_similarity": 0.803,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 13.5,
+          "ai": 14.3,
+          "diff": 0.8
+        },
+        "conceptual_depth": {
+          "human": 9.0,
+          "ai": 9.2,
+          "diff": 0.2
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 4.3,
+          "diff": 0.2
+        }
+      },
+      "evidence_extracted": "If balance factor is -2 and child is -1, RR single left rotation is executed..."
+    },
+    {
+      "sample_id": "SA-STR-05",
+      "category": "Strong",
+      "human_marks": 26.0,
+      "ai_marks": 28.1,
+      "max_marks": 30.0,
+      "abs_difference": 2.1,
+      "semantic_similarity": 0.8,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 13.5,
+          "ai": 14.6,
+          "diff": 1.1
+        },
+        "conceptual_depth": {
+          "human": 8.5,
+          "ai": 9.2,
+          "diff": 0.7
+        },
+        "clarity_edge_cases": {
+          "human": 4.0,
+          "ai": 4.3,
+          "diff": 0.3
+        }
+      },
+      "evidence_extracted": "When a new node causes balance factor to reach +2 or -2, we apply tree rotations..."
+    },
+    {
+      "sample_id": "SA-PAR-06",
+      "category": "Partial",
+      "human_marks": 17.5,
+      "ai_marks": 25.6,
+      "max_marks": 30.0,
+      "abs_difference": 8.1,
+      "semantic_similarity": 0.778,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 9.0,
+          "ai": 13.9,
+          "diff": 4.9
+        },
+        "conceptual_depth": {
+          "human": 5.5,
+          "ai": 9.0,
+          "diff": 3.5
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.7,
+          "diff": 0.3
+        }
+      },
+      "evidence_extracted": "If it becomes unbalanced, rotations are used..."
+    },
+    {
+      "sample_id": "SA-PAR-07",
+      "category": "Partial",
+      "human_marks": 16.5,
+      "ai_marks": 25.3,
+      "max_marks": 30.0,
+      "abs_difference": 8.8,
+      "semantic_similarity": 0.783,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 8.5,
+          "ai": 13.6,
+          "diff": 5.1
+        },
+        "conceptual_depth": {
+          "human": 5.0,
+          "ai": 9.0,
+          "diff": 4.0
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.7,
+          "diff": 0.3
+        }
+      },
+      "evidence_extracted": "In an AVL tree, we maintain balance factor <= 1..."
+    },
+    {
+      "sample_id": "SA-PAR-08",
+      "category": "Partial",
+      "human_marks": 17.5,
+      "ai_marks": 23.9,
+      "max_marks": 30.0,
+      "abs_difference": 6.4,
+      "semantic_similarity": 0.723,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 9.5,
+          "ai": 12.8,
+          "diff": 3.3
+        },
+        "conceptual_depth": {
+          "human": 5.0,
+          "ai": 8.5,
+          "diff": 3.5
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.6,
+          "diff": 0.4
+        }
+      },
+      "evidence_extracted": "When balance is broken, single rotation or double rotation restores balance..."
+    },
+    {
+      "sample_id": "SA-PAR-09",
+      "category": "Partial",
+      "human_marks": 15.5,
+      "ai_marks": 16.8,
+      "max_marks": 30.0,
+      "abs_difference": 1.3,
+      "semantic_similarity": 0.667,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 7.5,
+          "ai": 8.4,
+          "diff": 0.9
+        },
+        "conceptual_depth": {
+          "human": 5.5,
+          "ai": 6.0,
+          "diff": 0.5
+        },
+        "clarity_edge_cases": {
+          "human": 2.5,
+          "ai": 2.4,
+          "diff": 0.1
+        }
+      },
+      "evidence_extracted": "Single rotations fix LL and RR..."
+    },
+    {
+      "sample_id": "SA-PAR-10",
+      "category": "Partial",
+      "human_marks": 15.5,
+      "ai_marks": 24.6,
+      "max_marks": 30.0,
+      "abs_difference": 9.1,
+      "semantic_similarity": 0.757,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 8.0,
+          "ai": 13.2,
+          "diff": 5.2
+        },
+        "conceptual_depth": {
+          "human": 4.5,
+          "ai": 8.8,
+          "diff": 4.3
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.6,
+          "diff": 0.4
+        }
+      },
+      "evidence_extracted": "The balance factor must be {-1, 0, 1}..."
+    },
+    {
+      "sample_id": "SA-WEA-11",
+      "category": "Weak",
+      "human_marks": 7.0,
+      "ai_marks": 13.5,
+      "max_marks": 30.0,
+      "abs_difference": 6.5,
+      "semantic_similarity": 0.576,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 3.5,
+          "ai": 3.8,
+          "diff": 0.3
+        },
+        "conceptual_depth": {
+          "human": 2.0,
+          "ai": 6.0,
+          "diff": 4.0
+        },
+        "clarity_edge_cases": {
+          "human": 1.5,
+          "ai": 3.7,
+          "diff": 2.2
+        }
+      },
+      "evidence_extracted": "Search complexity in worst case can be O(N) if we do not balance it properly..."
+    },
+    {
+      "sample_id": "SA-WEA-12",
+      "category": "Weak",
+      "human_marks": 6.0,
+      "ai_marks": 15.1,
+      "max_marks": 30.0,
+      "abs_difference": 9.1,
+      "semantic_similarity": 0.61,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 3.0,
+          "ai": 7.5,
+          "diff": 4.5
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 5.3,
+          "diff": 3.8
+        },
+        "clarity_edge_cases": {
+          "human": 1.5,
+          "ai": 2.3,
+          "diff": 0.8
+        }
+      },
+      "evidence_extracted": "It does rotations when new numbers are added into the tree so it does not get to..."
+    },
+    {
+      "sample_id": "SA-WEA-13",
+      "category": "Weak",
+      "human_marks": 4.5,
+      "ai_marks": 10.2,
+      "max_marks": 30.0,
+      "abs_difference": 5.7,
+      "semantic_similarity": 0.539,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 2.0,
+          "ai": 3.2,
+          "diff": 1.2
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 4.9,
+          "diff": 3.4
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 2.1,
+          "diff": 1.1
+        }
+      },
+      "evidence_extracted": "We balance trees using red and black node colors and color flipping..."
+    },
+    {
+      "sample_id": "SA-WEA-14",
+      "category": "Weak",
+      "human_marks": 3.0,
+      "ai_marks": 8.6,
+      "max_marks": 30.0,
+      "abs_difference": 5.6,
+      "semantic_similarity": 0.232,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 1.0,
+          "ai": 2.7,
+          "diff": 1.7
+        },
+        "conceptual_depth": {
+          "human": 1.0,
+          "ai": 3.1,
+          "diff": 2.1
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 2.8,
+          "diff": 1.8
+        }
+      },
+      "evidence_extracted": "It does not work on negative weights because greedy choice fails..."
+    },
+    {
+      "sample_id": "SA-WEA-15",
+      "category": "Weak",
+      "human_marks": 5.0,
+      "ai_marks": 15.2,
+      "max_marks": 30.0,
+      "abs_difference": 10.2,
+      "semantic_similarity": 0.576,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 2.5,
+          "ai": 7.0,
+          "diff": 4.5
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 6.0,
+          "diff": 4.5
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 2.2,
+          "diff": 1.2
+        }
+      },
+      "evidence_extracted": "When height is unbalanced we rotate nodes..."
+    }
+  ]
+}

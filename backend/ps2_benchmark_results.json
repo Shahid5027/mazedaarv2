@@ -1,0 +1,404 @@
+{
+  "benchmark_name": "PS2 AVL Tree Subjective Grading Benchmark",
+  "sample_count": 15,
+  "total_max_marks": 30.0,
+  "overall_mae": 2.84,
+  "overall_mae_percentage": 9.5,
+  "criterion_mae": {
+    "technical_accuracy": 1.63,
+    "conceptual_depth": 2.31,
+    "clarity_edge_cases": 1.1
+  },
+  "samples": [
+    {
+      "sample_id": "SA-STR-01",
+      "category": "Strong",
+      "human_marks": 28.5,
+      "ai_marks": 28.7,
+      "max_marks": 30.0,
+      "abs_difference": 0.2,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.5,
+          "ai": 14.2,
+          "diff": 0.3
+        },
+        "conceptual_depth": {
+          "human": 9.5,
+          "ai": 10.0,
+          "diff": 0.5
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 4.5,
+          "diff": 0.0
+        }
+      },
+      "evidence_extracted": "An AVL tree maintains height balance such that for any node, balance factor = he..."
+    },
+    {
+      "sample_id": "SA-STR-02",
+      "category": "Strong",
+      "human_marks": 27.5,
+      "ai_marks": 25.2,
+      "max_marks": 30.0,
+      "abs_difference": 2.3,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.0,
+          "ai": 13.3,
+          "diff": 0.7
+        },
+        "conceptual_depth": {
+          "human": 9.0,
+          "ai": 9.9,
+          "diff": 0.9
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 2.0,
+          "diff": 2.5
+        }
+      },
+      "evidence_extracted": "AVL trees enforce the balance factor property |height(left) - height(right)| <= ..."
+    },
+    {
+      "sample_id": "SA-STR-03",
+      "category": "Strong",
+      "human_marks": 27.5,
+      "ai_marks": 21.8,
+      "max_marks": 30.0,
+      "abs_difference": 5.7,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 14.0,
+          "ai": 9.0,
+          "diff": 5.0
+        },
+        "conceptual_depth": {
+          "human": 9.5,
+          "ai": 8.3,
+          "diff": 1.2
+        },
+        "clarity_edge_cases": {
+          "human": 4.0,
+          "ai": 4.5,
+          "diff": 0.5
+        }
+      },
+      "evidence_extracted": "The AVL tree rebalancing algorithm preserves the BST ordering while keeping the ..."
+    },
+    {
+      "sample_id": "SA-STR-04",
+      "category": "Strong",
+      "human_marks": 27.0,
+      "ai_marks": 22.5,
+      "max_marks": 30.0,
+      "abs_difference": 4.5,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 13.5,
+          "ai": 9.5,
+          "diff": 4.0
+        },
+        "conceptual_depth": {
+          "human": 9.0,
+          "ai": 8.5,
+          "diff": 0.5
+        },
+        "clarity_edge_cases": {
+          "human": 4.5,
+          "ai": 4.5,
+          "diff": 0.0
+        }
+      },
+      "evidence_extracted": "AVL rebalancing operates on the invariant balance factor in {-1, 0, 1}..."
+    },
+    {
+      "sample_id": "SA-STR-05",
+      "category": "Strong",
+      "human_marks": 26.0,
+      "ai_marks": 26.4,
+      "max_marks": 30.0,
+      "abs_difference": 0.4,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 13.5,
+          "ai": 12.3,
+          "diff": 1.2
+        },
+        "conceptual_depth": {
+          "human": 8.5,
+          "ai": 9.6,
+          "diff": 1.1
+        },
+        "clarity_edge_cases": {
+          "human": 4.0,
+          "ai": 4.5,
+          "diff": 0.5
+        }
+      },
+      "evidence_extracted": "An AVL tree guarantees worst case O(log N) search and insertion by maintaining t..."
+    },
+    {
+      "sample_id": "SA-PAR-06",
+      "category": "Partial",
+      "human_marks": 17.5,
+      "ai_marks": 20.0,
+      "max_marks": 30.0,
+      "abs_difference": 2.5,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 9.0,
+          "ai": 9.5,
+          "diff": 0.5
+        },
+        "conceptual_depth": {
+          "human": 5.5,
+          "ai": 8.5,
+          "diff": 3.0
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.0,
+          "diff": 1.0
+        }
+      },
+      "evidence_extracted": "AVL tree is a self balancing binary search tree..."
+    },
+    {
+      "sample_id": "SA-PAR-07",
+      "category": "Partial",
+      "human_marks": 16.5,
+      "ai_marks": 15.5,
+      "max_marks": 30.0,
+      "abs_difference": 1.0,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 8.5,
+          "ai": 6.2,
+          "diff": 2.3
+        },
+        "conceptual_depth": {
+          "human": 5.0,
+          "ai": 7.3,
+          "diff": 2.3
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.0,
+          "diff": 1.0
+        }
+      },
+      "evidence_extracted": "In an AVL tree, we maintain balance factor <= 1..."
+    },
+    {
+      "sample_id": "SA-PAR-08",
+      "category": "Partial",
+      "human_marks": 17.5,
+      "ai_marks": 17.4,
+      "max_marks": 30.0,
+      "abs_difference": 0.1,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 9.5,
+          "ai": 7.6,
+          "diff": 1.9
+        },
+        "conceptual_depth": {
+          "human": 5.0,
+          "ai": 7.8,
+          "diff": 2.8
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.0,
+          "diff": 1.0
+        }
+      },
+      "evidence_extracted": "AVL balance factor formula is height(left) minus height(right)..."
+    },
+    {
+      "sample_id": "SA-PAR-09",
+      "category": "Partial",
+      "human_marks": 15.5,
+      "ai_marks": 14.8,
+      "max_marks": 30.0,
+      "abs_difference": 0.7,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 7.5,
+          "ai": 5.7,
+          "diff": 1.8
+        },
+        "conceptual_depth": {
+          "human": 5.5,
+          "ai": 7.1,
+          "diff": 1.6
+        },
+        "clarity_edge_cases": {
+          "human": 2.5,
+          "ai": 2.0,
+          "diff": 0.5
+        }
+      },
+      "evidence_extracted": "AVL trees use rotations to avoid becoming a linked list..."
+    },
+    {
+      "sample_id": "SA-PAR-10",
+      "category": "Partial",
+      "human_marks": 15.5,
+      "ai_marks": 15.5,
+      "max_marks": 30.0,
+      "abs_difference": 0.0,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 8.0,
+          "ai": 6.2,
+          "diff": 1.8
+        },
+        "conceptual_depth": {
+          "human": 4.5,
+          "ai": 7.3,
+          "diff": 2.8
+        },
+        "clarity_edge_cases": {
+          "human": 3.0,
+          "ai": 2.0,
+          "diff": 1.0
+        }
+      },
+      "evidence_extracted": "The balance factor must be {-1, 0, 1}..."
+    },
+    {
+      "sample_id": "SA-WEA-11",
+      "category": "Weak",
+      "human_marks": 7.0,
+      "ai_marks": 18.0,
+      "max_marks": 30.0,
+      "abs_difference": 11.0,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 3.5,
+          "ai": 6.2,
+          "diff": 2.7
+        },
+        "conceptual_depth": {
+          "human": 2.0,
+          "ai": 7.3,
+          "diff": 5.3
+        },
+        "clarity_edge_cases": {
+          "human": 1.5,
+          "ai": 4.5,
+          "diff": 3.0
+        }
+      },
+      "evidence_extracted": "AVL tree is a binary search tree where elements are sorted..."
+    },
+    {
+      "sample_id": "SA-WEA-12",
+      "category": "Weak",
+      "human_marks": 6.0,
+      "ai_marks": 9.0,
+      "max_marks": 30.0,
+      "abs_difference": 3.0,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 3.0,
+          "ai": 3.8,
+          "diff": 0.8
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 4.7,
+          "diff": 3.2
+        },
+        "clarity_edge_cases": {
+          "human": 1.5,
+          "ai": 0.5,
+          "diff": 1.0
+        }
+      },
+      "evidence_extracted": "AVL tree is used for fast searching..."
+    },
+    {
+      "sample_id": "SA-WEA-13",
+      "category": "Weak",
+      "human_marks": 4.5,
+      "ai_marks": 5.8,
+      "max_marks": 30.0,
+      "abs_difference": 1.3,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 2.0,
+          "ai": 1.4,
+          "diff": 0.6
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 3.9,
+          "diff": 2.4
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 0.5,
+          "diff": 0.5
+        }
+      },
+      "evidence_extracted": "We balance trees using red and black node colors and color flipping..."
+    },
+    {
+      "sample_id": "SA-WEA-14",
+      "category": "Weak",
+      "human_marks": 3.0,
+      "ai_marks": 8.5,
+      "max_marks": 30.0,
+      "abs_difference": 5.5,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 1.0,
+          "ai": 0.5,
+          "diff": 0.5
+        },
+        "conceptual_depth": {
+          "human": 1.0,
+          "ai": 3.5,
+          "diff": 2.5
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 4.5,
+          "diff": 3.5
+        }
+      },
+      "evidence_extracted": "Dijkstra algorithm uses a priority queue to find shortest paths..."
+    },
+    {
+      "sample_id": "SA-WEA-15",
+      "category": "Weak",
+      "human_marks": 5.0,
+      "ai_marks": 9.4,
+      "max_marks": 30.0,
+      "abs_difference": 4.4,
+      "criterion_agreement": {
+        "technical_accuracy": {
+          "human": 2.5,
+          "ai": 2.8,
+          "diff": 0.3
+        },
+        "conceptual_depth": {
+          "human": 1.5,
+          "ai": 6.1,
+          "diff": 4.6
+        },
+        "clarity_edge_cases": {
+          "human": 1.0,
+          "ai": 0.5,
+          "diff": 0.5
+        }
+      },
+      "evidence_extracted": "When height is unbalanced we rotate nodes..."
+    }
+  ]
+}

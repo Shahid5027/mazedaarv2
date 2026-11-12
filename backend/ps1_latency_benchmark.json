@@ -1,0 +1,45 @@
+{
+  "benchmark_name": "PS1 Response Latency Benchmark",
+  "official_sla_target_seconds": 8.0,
+  "measured_overall_avg_seconds": 0.012,
+  "measured_overall_avg_ms": 11.54,
+  "is_sla_compliant": true,
+  "endpoints": [
+    {
+      "operation": "Quiz Retrieval (GET /api/ps1/quiz/TOP_TREES)",
+      "runs": 10,
+      "average_ms": 21.29,
+      "min_ms": 4.57,
+      "max_ms": 164.74,
+      "std_dev_ms": 50.41,
+      "within_8s_target": true
+    },
+    {
+      "operation": "Quiz Submission & Bayesian Mastery Update (POST /api/ps1/quiz/submit)",
+      "runs": 10,
+      "average_ms": 16.21,
+      "min_ms": 14.58,
+      "max_ms": 20.32,
+      "std_dev_ms": 1.9,
+      "within_8s_target": true
+    },
+    {
+      "operation": "Curriculum Grounded Remediation RAG (GET /api/ps1/curriculum/remedial-rag)",
+      "runs": 10,
+      "average_ms": 3.88,
+      "min_ms": 3.05,
+      "max_ms": 4.55,
+      "std_dev_ms": 0.53,
+      "within_8s_target": true
+    },
+    {
+      "operation": "Classroom Adaptive Overview (GET /api/ps1/classroom-overview)",
+      "runs": 10,
+      "average_ms": 4.8,
+      "min_ms": 4.1,
+      "max_ms": 5.82,
+      "std_dev_ms": 0.5,
+      "within_8s_target": true
+    }
+  ]
+}
